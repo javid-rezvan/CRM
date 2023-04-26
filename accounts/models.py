@@ -21,7 +21,7 @@ class Product(models.Model):
     name=models.CharField(max_length=200,null=True)
     price=models.FloatField(null=True)
     category=models.CharField(max_length=200,null=True,choices=CATEGORY)
-    description=models.CharField(max_length=200,null=True)
+    description=models.CharField(max_length=200,null=True,blank=True)
     date_created=models.DateTimeField(auto_now_add=True,null=True)
     tags=models.ManyToManyField(Tag)
     
@@ -41,5 +41,7 @@ class Order(models.Model):
     product=models.ForeignKey(Product,null=True,on_delete=models.SET_NULL)
     date_created=models.DateTimeField(auto_now_add=True,null=True)
     status=models.CharField(max_length=200,null=True,choices=STATUS)
+    
+    
     
         
