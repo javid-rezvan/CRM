@@ -1,11 +1,13 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from . models import Product,Order,Tag,Customer
 
 def home(request):
     return render(request,'accounts/dashboard.html')
 
 def products(request):
-    return render(request,'accounts/products.html')
+    products=Product.objects.all()
+    context={'products':products}
+    return render(request,'accounts/products.html',context)
 
 
 def customer(request):
