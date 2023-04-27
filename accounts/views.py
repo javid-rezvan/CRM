@@ -3,6 +3,7 @@ from . models import Product,Order,Tag,Customer
 from . forms import OrderForm
 from django.forms import inlineformset_factory
 from . filters import OrderFilter
+from . forms import CreateUserForm
 
 def home(request):
     customers=Customer.objects.all()
@@ -70,4 +71,16 @@ def deleteOrder(request,pk):
     context={'item':order }
     return render(request,'accounts/delete.html',context)
 
+def registerPage(request):
+    form=CreateUserForm()
+    if request.method=='POST':
+        form=CreateUserForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+    context={'form':form}
+    return render(request,'accounts/register.html',context)
 
+def loginPage(request):
+    context={}
+    return render(request,'accounts/login.html',context)
