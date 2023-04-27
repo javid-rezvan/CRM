@@ -7,7 +7,9 @@ from . forms import CreateUserForm
 from django.contrib.auth import login,logout,authenticate
 from django.contrib import messages
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 
+@login_required(login_url='login')
 def home(request):
     customers=Customer.objects.all()
     total_customers=customers.count()
@@ -25,12 +27,13 @@ def home(request):
     
     return render(request,'accounts/dashboard.html',context)
 
+@login_required(login_url='login')
 def products(request):
     products=Product.objects.all()
     context={'products':products}
     return render(request,'accounts/products.html',context)
 
-
+@login_required(login_url='login')
 def customer(request,pk):
     customer=Customer.objects.get(id=pk)
     orders=customer.order_set.all()
@@ -39,7 +42,7 @@ def customer(request,pk):
     context={'customer':customer,'orders':orders,'myFilter':myFilter}
     return render(request,'accounts/customer.html',context)
 
-
+@login_required(login_url='login')
 def createOrder(request,pk):
     OrderFormSet=inlineformset_factory(Customer,Order,fields=('product','status'),extra=5)
     customer=Customer.objects.get(id=pk)
@@ -53,6 +56,7 @@ def createOrder(request,pk):
     context={'formset':formset}
     return render(request,'accounts/order_form.html',context)
 
+@login_required(login_url='login')
 def updateOrder(request,pk):
     
     order=Order.objects.get(id=pk)
@@ -66,6 +70,7 @@ def updateOrder(request,pk):
     context={'form':form}
     return render(request,'accounts/order_form.html',context)
 
+@login_required(login_url='login')
 def deleteOrder(request,pk):
     order=Order.objects.get(id=pk) 
     if request.method == 'POST':
@@ -74,7 +79,12 @@ def deleteOrder(request,pk):
     context={'item':order }
     return render(request,'accounts/delete.html',context)
 
+
 def registerPage(request):
+    
+    if request.user.is_authenticated:
+        return redirect('home')
+    
     form=CreateUserForm()
     if request.method=='POST':
         form=CreateUserForm(request.POST)
