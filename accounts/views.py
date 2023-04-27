@@ -4,6 +4,9 @@ from . forms import OrderForm
 from django.forms import inlineformset_factory
 from . filters import OrderFilter
 from . forms import CreateUserForm
+from django.contrib.auth import login,logout,authenticate
+from django.contrib import messages
+from django.contrib.auth.models import User
 
 def home(request):
     customers=Customer.objects.all()
@@ -76,11 +79,36 @@ def registerPage(request):
     if request.method=='POST':
         form=CreateUserForm(request.POST)
         if form.is_valid():
-            form.save()
+            user=form.save(commit=False)
+            user.save()
+            login(request,user)
             return redirect('home')
     context={'form':form}
     return render(request,'accounts/register.html',context)
 
 def loginPage(request):
-    context={}
-    return render(request,'accounts/login.html',context)
+    if request.user.is_authenticated:
+        return redirect('home')
+    
+    if request.method == 'POST':
+        username=request.POST.get('username')
+        password=request.POST.get('password')
+        
+        try:
+            user=User.objects.get(username=username)
+        
+            Authuser=authenticate(request,username=username,password=password)
+            if Authuser is not None:
+               login(request,Authuser)
+               return redirect('home')
+            else:
+                messages.error(request,'password is not correct')
+        except:
+            messages.error(request,'user dose not exists')    
+            
+   
+    return render(request,'accounts/login.html')
+
+def logoutUser(request):
+    logout(request)
+    return redirect('home')
