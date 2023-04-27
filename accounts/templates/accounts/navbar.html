@@ -12,6 +12,16 @@
         <li class="nav-item">
           <a class="nav-link" href="{% url 'products' %}">Products</a>
         </li>
+        <li class="nav-item">
+          {% if request.user.is_authenticated %}
+          <a class="nav-link" href="">Hello {{request.user.username}}</a>
+        </li>
+         <li> <a  class="btn btn-sm btn-danger" href="{% url 'logout' %}">Logout</a></li>
+         {% else %}
+         <li>
+         <a class="btn btn-sm btn-info" href="{% url 'login' %}">Login</a>      
+        </li>
+        {% endif %}
       </ul>
     </div>
   </nav>
