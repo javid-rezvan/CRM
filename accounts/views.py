@@ -8,8 +8,11 @@ from django.contrib.auth import login,logout,authenticate
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from .decorators import unauthenticated_user,allowed_users,admin_only
+from django.contrib.auth.models import Group
 
 @login_required(login_url='login')
+@admin_only
 def home(request):
     customers=Customer.objects.all()
     total_customers=customers.count()
@@ -28,12 +31,14 @@ def home(request):
     return render(request,'accounts/dashboard.html',context)
 
 @login_required(login_url='login')
+@allowed_users(allowed_roles=['admin'])
 def products(request):
     products=Product.objects.all()
     context={'products':products}
     return render(request,'accounts/products.html',context)
 
 @login_required(login_url='login')
+@allowed_users(allowed_roles=['admin'])
 def customer(request,pk):
     customer=Customer.objects.get(id=pk)
     orders=customer.order_set.all()
@@ -43,6 +48,7 @@ def customer(request,pk):
     return render(request,'accounts/customer.html',context)
 
 @login_required(login_url='login')
+@allowed_users(allowed_roles=['admin'])
 def createOrder(request,pk):
     OrderFormSet=inlineformset_factory(Customer,Order,fields=('product','status'),extra=5)
     customer=Customer.objects.get(id=pk)
@@ -57,6 +63,7 @@ def createOrder(request,pk):
     return render(request,'accounts/order_form.html',context)
 
 @login_required(login_url='login')
+@allowed_users(allowed_roles=['admin'])
 def updateOrder(request,pk):
     
     order=Order.objects.get(id=pk)
@@ -71,6 +78,7 @@ def updateOrder(request,pk):
     return render(request,'accounts/order_form.html',context)
 
 @login_required(login_url='login')
+@allowed_users(allowed_roles=['admin'])
 def deleteOrder(request,pk):
     order=Order.objects.get(id=pk) 
     if request.method == 'POST':
@@ -79,27 +87,24 @@ def deleteOrder(request,pk):
     context={'item':order }
     return render(request,'accounts/delete.html',context)
 
-
+@unauthenticated_user
 def registerPage(request):
-    
-    if request.user.is_authenticated:
-        return redirect('home')
     
     form=CreateUserForm()
     if request.method=='POST':
         form=CreateUserForm(request.POST)
         if form.is_valid():
-            user=form.save(commit=False)
-            user.save()
-            login(request,user)
-            return redirect('home')
+            user=form.save()
+            group=Group.objects.get(name='customer')
+            user.groups.add(group)
+            messages.success(request,'user was created for: ',user.username)
+            return redirect('login')
     context={'form':form}
     return render(request,'accounts/register.html',context)
 
+@unauthenticated_user
 def loginPage(request):
-    if request.user.is_authenticated:
-        return redirect('home')
-    
+  
     if request.method == 'POST':
         username=request.POST.get('username')
         password=request.POST.get('password')
@@ -122,3 +127,7 @@ def loginPage(request):
 def logoutUser(request):
     logout(request)
     return redirect('home')
+
+def userPage(request):
+    context={}
+    return render(request,'accounts/user.html',context)
