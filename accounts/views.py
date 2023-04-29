@@ -3,7 +3,7 @@ from . models import Product,Order,Tag,Customer
 from . forms import OrderForm
 from django.forms import inlineformset_factory
 from . filters import OrderFilter
-from . forms import CreateUserForm
+from . forms import CreateUserForm,CustomerForm
 from django.contrib.auth import login,logout,authenticate
 from django.contrib import messages
 from django.contrib.auth.models import User
@@ -97,6 +97,9 @@ def registerPage(request):
             user=form.save()
             group=Group.objects.get(name='customer')
             user.groups.add(group)
+            Customer.objects.create(
+                user=user
+            )
             messages.success(request,'user was created for: ',user.username)
             return redirect('login')
     context={'form':form}
@@ -128,6 +131,23 @@ def logoutUser(request):
     logout(request)
     return redirect('home')
 
+@login_required(login_url='login')
+@allowed_users(allowed_roles=['customer'])
 def userPage(request):
-    context={}
+    orders=request.user.customer.order_set.all()
+    total_orders=orders.count()
+    deliverd=orders.filter(status='Deliverd').count()
+    pending=orders.filter(status='pending').count()
+    context={'orders':orders,'total_orders':total_orders,'deliverd':deliverd,'pending':pending}
     return render(request,'accounts/user.html',context)
+
+def accountSettings(request):
+    customer=request.user.customer
+    form=CustomerForm(instance=customer)
+    if request.method == 'POST':
+        form=CustomerForm(request.POST,request.FILES,instance=customer)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+    context={'form':form}
+    return render(request,'accounts/account_settings.html',context)
