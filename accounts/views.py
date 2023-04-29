@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from .decorators import unauthenticated_user,allowed_users,admin_only
-from django.contrib.auth.models import Group
+
 
 @login_required(login_url='login')
 @admin_only
@@ -95,11 +95,6 @@ def registerPage(request):
         form=CreateUserForm(request.POST)
         if form.is_valid():
             user=form.save()
-            group=Group.objects.get(name='customer')
-            user.groups.add(group)
-            Customer.objects.create(
-                user=user
-            )
             messages.success(request,'user was created for: ',user.username)
             return redirect('login')
     context={'form':form}
